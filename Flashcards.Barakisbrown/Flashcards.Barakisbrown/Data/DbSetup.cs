@@ -7,7 +7,7 @@ namespace Flashcards.Barakisbrown.Data;
 
 public class DbSetup
 {
-    private readonly string? _dataSource;
+    private readonly string? _dataSource = Configuration.GetConnectionString();
     private readonly string? _dbName = Configuration.LoadSettings().DbName;
     private readonly string? _cardTableName = Configuration.LoadSettings().CardTableName;
     private readonly string? _stackTableName = Configuration.LoadSettings().StackTableName;
@@ -15,9 +15,9 @@ public class DbSetup
     private readonly string? _cardScript = Configuration.LoadSettings().InitCardTableScript;
     private readonly string? _stackScript = Configuration.LoadSettings().InitStackTableScript;
 
-    public DbSetup(string? dataSource)
+    public DbSetup() 
     {
-        _dataSource = dataSource;
+        
     }
 
     public bool InitSetup()
@@ -31,8 +31,9 @@ public class DbSetup
             bool table_success = CreateTables();
             return db_success && table_success;
         }
-        AnsiConsole.WriteLine("Rare Occasion DB is created but tables were not generated. Checking Now ..");
-        if (TableExist(_cardTableName))
+        AnsiConsole.WriteLine("Yes the DB is created");
+        AnsiConsole.WriteLine("Sometimes a rare occasion when the DB is created but the tables will not be generated...So checking now.");
+        if (TableExist(_cardTableName) && TableExist(_stackTableName))
         {
             AnsiConsole.WriteLine("Tables where successfully created.");
             return true;
