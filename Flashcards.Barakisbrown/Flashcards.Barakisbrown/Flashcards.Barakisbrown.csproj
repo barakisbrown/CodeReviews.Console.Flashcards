@@ -8,10 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Input\" />
-    <Folder Include="MenuFiles\" />
-    <Folder Include="Menus\" />
-    <Folder Include="TableViewer\" />
+    <Compile Remove="Input\**" />
+    <Compile Remove="MenuFiles\**" />
+    <Compile Remove="Menus\**" />
+    <Compile Remove="TableViewer\**" />
+    <EmbeddedResource Remove="Input\**" />
+    <EmbeddedResource Remove="MenuFiles\**" />
+    <EmbeddedResource Remove="Menus\**" />
+    <EmbeddedResource Remove="TableViewer\**" />
+    <None Remove="Input\**" />
+    <None Remove="MenuFiles\**" />
+    <None Remove="Menus\**" />
+    <None Remove="TableViewer\**" />
   </ItemGroup>
 
   <ItemGroup>
