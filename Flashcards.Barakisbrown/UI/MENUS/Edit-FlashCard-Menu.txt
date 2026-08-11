@@ -1,0 +1,6 @@
+﻿EDIT FLASHCARDS MENU
+
+All -> Edit front and back
+Front -> Edit Front
+Back -> Edit back
+Exit -> Go back a menu
