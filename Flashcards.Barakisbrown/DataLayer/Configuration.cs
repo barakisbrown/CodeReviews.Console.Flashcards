@@ -25,7 +25,7 @@ public static class Configuration
         return configuration.GetSection("AppKeys").Get<DbConfig>();
     }
 
-    public static string GetConnectionStrings(string whichConnection)
+    public static DbUser GetConnectionStrings()
     {
         var path = AppDomain.CurrentDomain.BaseDirectory;
 
@@ -35,7 +35,7 @@ public static class Configuration
 
         IConfiguration configuration = builder.Build();
 
-        return configuration.GetConnectionString(whichConnection);
+        return configuration.GetSection("ConnectionStrings").Get<DbUser>();
     }
 
     public static DbUser GetUserSecretsConnStrings()

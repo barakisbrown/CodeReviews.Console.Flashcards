@@ -17,8 +17,8 @@ using Spectre.Console;
  */
 public class DbSetup
 {
-    private readonly DbConfig appSettings = Configuration.LoadSettings();    
-    private readonly DbUser userSecrets = Configuration.GetUserSecretsConnStrings();
+    private readonly DbConfig appSettings = Configuration.LoadSettings();
+    private readonly DbUser userSecrets = Configuration.GetConnectionStrings();
     private bool IsSetup = false;
 
     /// <summary>
