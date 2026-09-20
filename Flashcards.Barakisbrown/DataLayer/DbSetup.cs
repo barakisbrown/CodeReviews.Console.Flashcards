@@ -185,13 +185,17 @@ public class DbSetup
     }
 
     /// <summary>
-    /// Calls ExecuteScript for Stack Table and then Card Table.
+    /// Calls ExecuteScript for Stack Table and then Card Table AND Session Table AND CardsPerStack View
     /// </summary>
     /// <returns>True if both tables succeeded in creation. False Otherwise</returns>
     private bool CreateTables()
     {
         bool stackSuccess = ExectureScript(appSettings.CreateStackSql,userSecrets.Main);
         bool cardSuccess = ExectureScript(appSettings.CreateCardSql,userSecrets.Main);
-        return stackSuccess && cardSuccess;
+        bool sessionSuccess = ExectureScript(appSettings.CreateSessionSql, userSecrets.Main);
+        bool cardStackViewSuccess = ExectureScript(appSettings.CardPerStackViewSql, userSecrets.Main);
+        
+        
+        return stackSuccess && cardSuccess && sessionSuccess && cardStackViewSuccess;
     }
 }
