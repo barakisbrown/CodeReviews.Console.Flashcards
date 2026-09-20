@@ -11,5 +11,6 @@ public class DbConfig
     // SQL FILES BELOW
     public string CreateDBSql { get; set; } = string.Empty;
     public string CreateCardSql { get; set; } = string.Empty;
-    public string CreateStackSql { get; set; } = string.Empty;   
-}
+    public string CreateStackSql { get; set; } = string.Empty;
+    public string CreateSessionSql { get; set; } = string.Empty;
+    public string CardPerStackViewSql { get; set; } = string.Empty;
