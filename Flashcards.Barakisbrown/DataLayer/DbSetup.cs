@@ -19,7 +19,8 @@ public class DbSetup
 {
     private readonly DbConfig appSettings = Configuration.LoadSettings();
     private readonly DbUser userSecrets = Configuration.GetConnectionStrings();
-    private bool IsSetup = false;
+    private static bool IsSetup = false;
+
 
     /// <summary>
     /// Initializes a new instance of the DbSetup class and configures the main and backup database connection strings.
@@ -41,34 +42,67 @@ public class DbSetup
     /// database being initialized.</remarks>
     private void InitSetup()
     {
-        AnsiConsole.WriteLine("FlashCard App Database Setup");
         if (DbExist())
         {
             var card = TableExist(appSettings.CardTable);
             var stack = TableExist(appSettings.StackTable);
-            if (card && stack)
+            var session = TableExist(appSettings.StudiesTable);
+            var CardPerStackview = TableExist(appSettings.CardsPerStackView,ServerObjects.VIEWS);
+            var AddNewSessionSp = TableExist(appSettings.AddNewSessionSp, ServerObjects.SP);
+            var check1 = card && stack;
+            var check2 = session && CardPerStackview && AddNewSessionSp;
+
+            if (check1 && check2)
                 IsSetup = true;
             else
             {
-                if ((!stack)||(!card))
+                if (!check1)
                 {
-                    AnsiConsole.WriteLine($"{stack} table does not exist");
-                    AnsiConsole.WriteLine($"{card} table does not exist");
-                    AnsiConsole.WriteLine("Creating Tables");
-                    CreateTables();
-
+                    if (!card)
+                    {
+                        ShowError("Card Table does not exist!");
+                        CreateTable(appSettings.CreateCardSql);
+                    }
+                    if (!stack)
+                    {
+                        ShowError("Stack Table does not exist");
+                        CreateTable(appSettings.CreateStackSql);
+                    }
                 }
+                if (!check2)
+                {
+                    if (!session)
+                    {
+                        ShowError("Session Table does not exist!");
+                        CreateTable(appSettings.CreateSessionSql);
+                    }
+                    if (!CardPerStackview)
+                    {
+                        ShowError("CardPerStack View does not exist");
+                        CreateTable(appSettings.CreateCardsPerStackViewSql);
+                    }
+                    if (!AddNewSessionSp)
+                    {
+                        ShowError("AddNewSession Store Procedure Not found");
+                        CreateTable(appSettings.AddNewSessionStoredProcedure);
+                    }
+                }
+                AnsiConsole.WriteLine("Tables are now created.");
+                Thread.Sleep(3000);
                 IsSetup = true;
             }
         }
         else
         {
+            AnsiConsole.WriteLine("FlashCard App Database Setup");
             AnsiConsole.WriteLine();
             CreateDB();
             AnsiConsole.WriteLine();
             AnsiConsole.WriteLine("Creating Tables");
-            CreateTables();
+            if (CreateTables())
+                AnsiConsole.WriteLine("Tables Created Successfully");
             AnsiConsole.WriteLine("Exiting Initial Setup.");
+            Thread.Sleep(3000);
             IsSetup = true;
         }
     }
@@ -83,28 +117,27 @@ public class DbSetup
     private bool DbExist()
     {        
         using var conn = new SqlConnection(userSecrets.Main);
-        if (conn.State != System.Data.ConnectionState.Open)
-            try
-            {
-                conn.Open();
-            }
-            catch (SqlException e)
-            {
-                AnsiConsole.WriteLine("ERROR : DATABASE FLASHCARDS DOES NOT EXIST...");
-                // DATABASE DOES NOT EXIST HERE
-                return false;
-            }
-        // Connection is OPEN
-        using var cmd = new SqlCommand();
-        cmd.CommandText = "SELECT DB_ID(@DbName)";
+        try
+        {
+            conn.Open();
+            // Connection is OPEN
+            using var cmd = new SqlCommand();
+            cmd.CommandText = "SELECT DB_ID(@DbName)";
 
-        SqlParameter dbName = new("@DbName", System.Data.SqlDbType.NChar, appSettings.DbName.Length) { Value = appSettings.DbName };
-        cmd.Parameters.Add(dbName);
-        cmd.Connection = conn;
-        cmd.Prepare();
+            SqlParameter dbName = new("@DbName", System.Data.SqlDbType.NChar, appSettings.DbName.Length) { Value = appSettings.DbName };
+            cmd.Parameters.Add(dbName);
+            cmd.Connection = conn;
+            cmd.Prepare();
 
-        var Exist = cmd.ExecuteScalar();
-        return !DBNull.Value.Equals(Exist);
+            var Exist = cmd.ExecuteScalar();
+            return !DBNull.Value.Equals(Exist);
+        }
+        catch (SqlException e)
+        {
+            AnsiConsole.WriteLine("ERROR : DATABASE FLASHCARDS DOES NOT EXIST...");
+            // DATABASE DOES NOT EXIST HERE
+            return false;
+        }        
     }
 
     /// <summary>
@@ -114,31 +147,43 @@ public class DbSetup
     /// the database does not exist or cannot be accessed, a SqlException is thrown.</remarks>
     /// <param name="tableName">The name of the table to check for existence. Can be null or empty, in which case the method will return false.</param>
     /// <returns>true if a table with the specified name exists in the database; otherwise, false.</returns>
-    private bool TableExist(string? tableName)
+    private bool TableExist(string? tableName,ServerObjects objects = ServerObjects.TABLES)
     {
         using var conn = new SqlConnection(userSecrets.Main);
-        if (conn.State != System.Data.ConnectionState.Open)
-            try
+        var table = "@table,'U'";
+        var view = "@table,'V'";
+        var sp = "@table,'P'";
+        try
+        {
+            conn.Open();
+            using var cmd = new SqlCommand();
+            cmd.Connection = conn;
+            switch(objects)
             {
-                conn.Open();
+                case ServerObjects.TABLES:
+                    cmd.CommandText = $"If Object_ID({table}) IS NOT NULL SELECT 1 ELSE SELECT 0";
+                    break;
+                case ServerObjects.VIEWS:
+                    cmd.CommandText = $"If Object_ID({view}) IS NOT NULL SELECT 1 ELSE SELECT 0";
+                    break;
+                case ServerObjects.SP:
+                    cmd.CommandText = $"If Object_ID({sp}) IS NOT NULL SELECT 1 ELSE SELECT 0";
+                    break;
             }
-            catch (SqlException e)
-            {
-                AnsiConsole.WriteLine("ERROR : DATABASE FLASHCARDS DOES NOT EXIST..");
-                throw;
-            }
+            SqlParameter parm = new("@table", System.Data.SqlDbType.NChar, tableName.Length) { Value = tableName };
+            cmd.Parameters.Add(parm);
+            cmd.Prepare();
 
-        using var cmd = new SqlCommand();
-        cmd.Connection = conn;
-        cmd.CommandText = "If Object_ID(@table,'U') IS NOT NULL SELECT 1 ELSE SELECT 0";
-
-        SqlParameter parm = new("@table", System.Data.SqlDbType.NChar, tableName.Length) { Value = tableName };
-        cmd.Parameters.Add(parm);
-        cmd.Prepare();
-
-        int? result = cmd.ExecuteScalar() as int?;
-        return result == 1;
+            int? result = cmd.ExecuteScalar() as int?;
+            return result == 1;
+        }
+        catch (SqlException e)
+        {
+            AnsiConsole.WriteLine("ERROR : DATABASE FLASHCARDS DOES NOT EXIST..");
+            throw;
+        }
     }
+
 
     /// <summary>
     /// Executes a SQL script from the specified file against the database using the provided connection string.
@@ -189,13 +234,32 @@ public class DbSetup
     /// </summary>
     /// <returns>True if both tables succeeded in creation. False Otherwise</returns>
     private bool CreateTables()
-    {
+    {        
         bool stackSuccess = ExectureScript(appSettings.CreateStackSql,userSecrets.Main);
         bool cardSuccess = ExectureScript(appSettings.CreateCardSql,userSecrets.Main);
         bool sessionSuccess = ExectureScript(appSettings.CreateSessionSql, userSecrets.Main);
-        bool cardStackViewSuccess = ExectureScript(appSettings.CardPerStackViewSql, userSecrets.Main);
+        bool cardStackViewSuccess = ExectureScript(appSettings.CreateCardsPerStackViewSql, userSecrets.Main);
+        bool addSessionSP = ExectureScript(appSettings.AddNewSessionStoredProcedure, userSecrets.Main);
         
         
-        return stackSuccess && cardSuccess && sessionSuccess && cardStackViewSuccess;
+        return stackSuccess && cardSuccess && sessionSuccess && cardStackViewSuccess && addSessionSP;
+    }
+
+    private bool CreateTable(string sql)
+    {
+        bool completed = ExectureScript(sql, userSecrets.Main);
+        return completed;
+    }
+
+    private static void ShowError(string message)
+    {
+        AnsiConsole.MarkupLineInterpolated($"[red]{message}[/]");
     }
 }
+
+enum ServerObjects
+{
+    TABLES,
+    VIEWS,
+    SP
+};

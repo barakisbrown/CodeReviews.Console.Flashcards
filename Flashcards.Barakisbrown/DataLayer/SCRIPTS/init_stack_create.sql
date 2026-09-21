@@ -8,7 +8,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[Stack](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](15) NOT NULL,
  CONSTRAINT [PK_Stack] PRIMARY KEY CLUSTERED 
  (
@@ -21,3 +21,5 @@ CREATE TABLE [dbo].[Stack](
 ) ON [PRIMARY]
 GO
 
+INSERT INTO Stack(Name) VALUES('DEFAULT');
+GO

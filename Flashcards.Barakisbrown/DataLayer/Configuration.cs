@@ -12,8 +12,7 @@ namespace DataLayer;
 public static class Configuration
 {
     public static DbConfig LoadSettings()
-    {
-        Console.WriteLine("ACCESSED");
+    {     
         var path = AppContext.BaseDirectory;
         
         var builder = new ConfigurationBuilder()

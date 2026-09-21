@@ -96,6 +96,7 @@ public class CardMenu : IMenu
             AnsiConsole.WriteLine("To create a new FlashCard, you will need to enter a prompt followed by the answer.");
             AnsiConsole.WriteLine("You can assign to a Stack here unless you want it to be attached the DEFAULT stack.");
             AnsiConsole.WriteLine("You can change the stacks name of the flashcard later if needed.");
+            AnsiConsole.MarkupLine($"[bold][blink]Prompt and answer are CASE SENSITIVE. BEWARE! [/][/]");
 
             var cancel = new TextPrompt<string>("Prompt => (HIT RETURN TO EXIT)").AllowEmpty();
 

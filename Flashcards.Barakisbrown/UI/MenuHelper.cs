@@ -1,7 +1,5 @@
-﻿
-using DataLayer.Controller;
+﻿using DataLayer.Controller;
 using DataLayer.Models;
-using Microsoft.SqlServer.Management.HadrModel;
 using Spectre.Console;
 
 namespace UI;

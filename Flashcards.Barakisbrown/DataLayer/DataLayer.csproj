@@ -8,12 +8,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="SCRIPTS\AddNewSession.sql" />
+    <None Remove="SCRIPTS\CardsPerStackView.sql" />
     <None Remove="SCRIPTS\init_card_create.sql" />
     <None Remove="SCRIPTS\init_create_db.sql" />
     <None Remove="SCRIPTS\init_stack_create.sql" />
+    <None Remove="SCRIPTS\sessions.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="SCRIPTS\AddNewSession.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SCRIPTS\CardsPerStackView.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="SCRIPTS\init_card_create.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -22,6 +31,9 @@
     </Content>
     <Content Include="SCRIPTS\init_stack_create.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SCRIPTS\sessions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

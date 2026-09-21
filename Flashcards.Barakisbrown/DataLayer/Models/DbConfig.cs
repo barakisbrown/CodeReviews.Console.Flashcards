@@ -6,6 +6,9 @@ public class DbConfig
     public string StackTable { get; set; } = string.Empty;
     public string CardTable { get; set; } = string.Empty;
     public string StudiesTable { get; set; } = string.Empty;
+    public string CardsPerStackView { get; set; } = string.Empty;
+
+    public string AddNewSessionSp { get; set; } = string.Empty;
     public string NotImplementedMsg { get; set; } = string.Empty;
 
     // SQL FILES BELOW
@@ -13,4 +16,6 @@ public class DbConfig
     public string CreateCardSql { get; set; } = string.Empty;
     public string CreateStackSql { get; set; } = string.Empty;
     public string CreateSessionSql { get; set; } = string.Empty;
-    public string CardPerStackViewSql { get; set; } = string.Empty;
+    public string CreateCardsPerStackViewSql { get; set; } = string.Empty;
+    public string AddNewSessionStoredProcedure { get; set; } = string.Empty;
+}
