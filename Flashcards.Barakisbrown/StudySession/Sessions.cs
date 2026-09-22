@@ -42,17 +42,7 @@ public class Sessions(CardController _card,StackController _stack)
             }
         }
     }
-
-    private SelectionPrompt<Stack> GetStackNameList(List<Stack> stackList)
-    {
-        string title = Environment.NewLine + "Select Flash Card Stack to Study.";
-        var prompt = new SelectionPrompt<Stack>()
-            .Title(title)
-            .UseConverter(s => $"[bold]{s.Name}[/]")
-            .AddChoices<Stack>(stackList);
-        return prompt;
-    }
-
+    
     private Dictionary<int,CardDTO> DisplayCardList(List<CardDTO> _cards)
     {
         var dict = new Dictionary<int, CardDTO>();
@@ -112,10 +102,10 @@ public class Sessions(CardController _card,StackController _stack)
         while(true)
         {
             AnsiConsole.Clear();
-            AnsiConsole.WriteLine("Lets start a new study session");
+            AnsiConsole.WriteLine("Lets start a new study session");            
 
             var stackList = _stack.GetStackForDisplay(true);
-            var choice = AnsiConsole.Prompt(GetStackNameList(stackList));
+            var choice = AnsiConsole.Prompt(Helper.GetStackNameList(stackList));
                         
             if (choice.ID != 0)
             {
@@ -131,16 +121,21 @@ public class Sessions(CardController _card,StackController _stack)
                     DisplayTable(cards,stackName);
                     AnsiConsole.WriteLine();
                     // NOTE : THIS NEEDS TO BE LOOPED
-                    var studyID = new TextPrompt<int>($"Enter the # of Flash Card(1 - {cards.Count}) to Study OR 0 to EXIT")
+                    var studyID = new TextPrompt<int>($"Enter the # of Flash Card(1 - {cards.Count}) to Study OR -1 for a random flash card to study 0 to EXIT")
                         .Validate(input =>
                          {
                              if (input == 0) return ValidationResult.Success();
                              else if (input >= 1 && input <= cards.Count) return ValidationResult.Success();
+                             else if (input == -1) return ValidationResult.Success();
                              else
                                  return ValidationResult.Error($"[red]{input} does not exist.  Must be between 1 and {cards.Count}[/]");
                          });
 
                     var prompt = AnsiConsole.Prompt(studyID);
+                    // RANDOM NUMBER TEST BEGIN                    
+                    if (prompt == -1)
+                        prompt = Helper.GetRandomFlashCardFromList(cards.Count + 1);
+                    // END
                     if (prompt != 0)
                     {
                         (int asked, int correct) = TestFlashCard(stackName, cards[prompt].Front, cards[prompt].Back);                        
@@ -229,14 +224,31 @@ public class Sessions(CardController _card,StackController _stack)
     {
         AnsiConsole.Clear();
         var sessionData = _sessionCtr.GetUserSessionData();
+        // USE THIS TO GET DAILY TOTAL --> IT WILL NOT PASS THE CHALLENGE
+        // BUT HAPPY I CAN DO IT ON MY OWN
+        var totals = sessionData.Aggregate(
+            new { TotalScore = 0, TotalAsked = 0 },
+            (acc, item) => new
+            {
+                TotalScore = acc.TotalScore + item.Score,
+                TotalAsked = acc.TotalAsked + item.TotalQuestions,
+                
+            }
+        );
+
+        var totalPerecentage = (double)totals.TotalScore / totals.TotalAsked * 100;
+        string percent = $"{totalPerecentage:F2}%";
+
         if (sessionData.Count == 0)
         {
             AnsiConsole.MarkupLineInterpolated($"[RED]NO USER DATA EXIST.  USE THE NEW MENU OPTION INSTEAD.[/]");
         }
         else
         {
+            AnsiConsole.WriteLine();
             var title = $"[Bold]USER STATS SO FAR[/]";
             var table = new Table();
+            
             table.Title(title);
             table.AddColumn("Stack Name");
             table.AddColumn("Question Asked");
@@ -253,7 +265,19 @@ public class Sessions(CardController _card,StackController _stack)
                     );
             }
 
-            AnsiConsole.Write(table);
+            var align = Align.Center(table);
+            
+            AnsiConsole.Write(align);
+            AnsiConsole.WriteLine();
+            table = new Table();
+            table.Title("Daily Totals");
+            table.Rows.Clear();
+            table.AddColumn("Total Score");
+            table.AddColumn("Total Questions");
+            table.AddColumn("Total Percentage");            
+            table.AddRow(totals.TotalScore.ToString(), totals.TotalAsked.ToString(), percent);
+            align = Align.Center(table);
+            AnsiConsole.Write(align);
         }
         AnsiConsole.WriteLine("Press any key to exit.");
         Console.ReadKey(true);
